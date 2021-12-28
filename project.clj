@@ -5,5 +5,6 @@
             :url "https://www.eclipse.org/legal/epl-2.0/"}
   :dependencies [[org.clojure/clojure "1.10.3"]
                  [manifold "0.2.3"]
-                 [aleph "0.4.6"]]
+                 [aleph "0.4.6"]
+                 [org.clj-commons/byte-streams "0.2.10"]]
   :repl-options {:init-ns aleph-tcp-sample.core})

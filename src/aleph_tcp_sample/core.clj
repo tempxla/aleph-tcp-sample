@@ -2,7 +2,8 @@
   (:require [aleph.tcp :as tcp]
             [manifold.deferred :as d]
             [manifold.stream :as s]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [byte-streams :as bs]))
 
 (def echo-server (atom nil))
 
@@ -18,7 +19,14 @@
              x]))
 
 (defn echo-handler [s info]
-  (s/connect s s))
+  (s/connect-via s
+                 (fn [x]
+                   (->> x
+                        (bs/to-string)
+                        (response-echo)
+                        (bs/to-byte-buffer)
+                        (s/put! s)))
+                 s))
 
 (defn go []
   (reset! echo-server (tcp/start-server echo-handler {:port 10001})))
