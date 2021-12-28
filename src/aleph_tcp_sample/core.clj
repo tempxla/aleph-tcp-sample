@@ -19,14 +19,19 @@
              x]))
 
 (defn echo-handler [s info]
-  (s/connect-via s
-                 (fn [x]
-                   (->> x
-                        (bs/to-string)
-                        (response-echo)
-                        (bs/to-byte-buffer)
-                        (s/put! s)))
-                 s))
+  (d/loop [n 100] ; MaxKeepAliveRequests
+    (-> (d/timeout! (s/take! s) 5000 :timeout) ;KeepAliveTimeout
+        (d/chain (fn [x]
+                   (if (= :timeout x)
+                     (s/close! s)
+                     (do (->> x
+                              (bs/to-string)
+                              (response-echo)
+                              (bs/to-byte-buffer)
+                              (s/put! s))
+                         (if (pos? n)
+                           (d/recur (dec n))
+                           (s/close! s)))))))))
 
 (defn go []
   (reset! echo-server (tcp/start-server echo-handler {:port 10001})))
